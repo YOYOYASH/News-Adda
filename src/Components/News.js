@@ -1,63 +1,72 @@
 import React, { Component } from "react";
 import NewsItem from "./NewsItem";
+import Spinner from "./Spinner";
 
 export class News extends Component {
   constructor() {
     super();
     this.state = {
       articles: [],
+      loading: false,
       page: 1,
     };
   }
   async componentDidMount() {
     let url =
-      "https://newsapi.org/v2/top-headlines?country=in&apiKey=cfbf3f2a6e894c929ceefd3dc60299af";
+      `https://newsapi.org/v2/top-headlines?country=in&apiKey=cfbf3f2a6e894c929ceefd3dc60299af&page=1&pageSize=${this.props.pageSize}`;
     let data = await fetch(url);
+    this.setState({loading:true})
     let parsedData = await data.json();
     console.log(parsedData);
     this.setState({
       articles: parsedData.articles,
       totalResults: parsedData.totalResults,
+      loading:false
     });
   } //loads after render
 
   handlePreviousClick = async () => {
     let url = `https://newsapi.org/v2/top-headlines?country=in&apiKey=cfbf3f2a6e894c929ceefd3dc60299af&page=${
       this.state.page - 1
-    }&pageSize=20`;
+    }&pageSize=${this.props.pageSize}`;
     let data = await fetch(url);
+    this.setState({loading:true})
     let parsedData = await data.json();
     console.log(parsedData);
     this.setState({
       articles: parsedData.articles,
       page: this.state.page - 1,
+      loading:false
     });
   };
 
   handleNextClick = async () => {
-    if (this.state.page + 1 > Math.ceil(this.state.totalResults / 20)) {
-    } else {
+    
       let url = `https://newsapi.org/v2/top-headlines?country=in&apiKey=cfbf3f2a6e894c929ceefd3dc60299af&page=${
         this.state.page + 1
-      }&pageSize=20`;
+      }&pageSize=${this.props.pageSize}`;
+      this.setState({loading:true})
       let data = await fetch(url);
       let parsedData = await data.json();
       console.log(parsedData);
       this.setState({
         articles: parsedData.articles,
-
         page: this.state.page + 1,
+        loading:false
+
       });
-    }
+    
   };
 
   render() {
     return (
       <div className="container my-3">
-        <h2>News Adda: Top Headlines</h2>
-
+        <h1 className="text-center">
+        News Adda: Top Headlines
+        </h1>
+        {this.state.loading && <Spinner/>}
         <div className="row">
-          {this.state.articles.map((element) => {
+          {!this.state.loading && this.state.articles.map((element) => {
             return (
               <div className="col-md-4 my-3" key={element.url}>
                 <NewsItem
@@ -80,6 +89,7 @@ export class News extends Component {
             &larr; Previous
           </button>
           <button
+            disabled={this.state.page + 1 > Math.ceil(this.state.totalResults / this.props.pageSize)}
             type="button"
             className="btn btn-dark"
             onClick={this.handleNextClick}
